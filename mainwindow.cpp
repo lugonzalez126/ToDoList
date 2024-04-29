@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFile>
 #include <QStandardPaths>
-#include <QMessageBox>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -71,6 +71,8 @@ void MainWindow::on_clearButton_2_clicked()
 
 
 
+
+
 void MainWindow::on_SortButton_clicked()
 {
     static int sortOrder = 0;  // Static variable to remember the current sort order
@@ -109,6 +111,22 @@ void MainWindow::on_DeleteButton_clicked()
             --i; // Decrement i to handle the removal of the current item
         }
     }
+
+}
+
+
+
+
+
+
+
+
+void MainWindow::on_historyButton_clicked()
+{
+
+   Dialog secdialog;
+   secdialog.setModal (true);
+   secdialog.exec();
 
 }
 

@@ -5,47 +5,38 @@
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
-
     QFile file(path);
-    if(!file.open(QIODevice::ReadWrite)) { //open file
-        QMessageBox::information(0, "error", file.errorString());// gives error if no file for todo list is vailable
+    if (file.open(QIODevice::ReadOnly)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList parts = line.split(',');
+            if (parts.length() > 1) {  // Ensure the line is correctly formatted
+                QListWidgetItem* item = new QListWidgetItem(parts[0], ui->listWidget);
+                item->setFlags(item->flags() | Qt::ItemIsEditable | Qt::ItemIsUserCheckable);
+                item->setCheckState(parts[1].toInt() ? Qt::Checked : Qt::Unchecked);
+                ui->listWidget->addItem(item);
+            }
+        }
+        file.close();
     }
-
-    QTextStream in(&file); //Reads File
-
-    while(!in.atEnd()){
-        QListWidgetItem* item = new QListWidgetItem(in.readLine(), ui->listWidget);
-        ui->listWidget->addItem(item); // adds the item
-        item->setFlags(item->flags() | Qt::ItemIsEditable); //makes the item editable
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable); // makes the item checkable
-        item->setCheckState(Qt::Unchecked);
-
-    }
-    file.close();
-
 }
 
 MainWindow::~MainWindow() {
-
     QFile file(path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-    } else {
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream out(&file);
-        int itemCount = ui->listWidget->count();
-        if (itemCount == 0) {
-        }
-        for (int i = 0; i < itemCount; ++i) {
-            out << ui->listWidget->item(i)->text() << "\n";
+        for (int i = 0; i < ui->listWidget->count(); ++i) {
+            QListWidgetItem* item = ui->listWidget->item(i);
+            int checkState = item->checkState() == Qt::Checked ? 1 : 0;
+            out << item->text() << "," << checkState << "\n";
         }
         file.close();
     }
     delete ui;
-
 }
 
 void MainWindow::on_addButton_clicked()
@@ -82,7 +73,42 @@ void MainWindow::on_clearButton_2_clicked()
 
 void MainWindow::on_SortButton_clicked()
 {
+    static int sortOrder = 0;  // Static variable to remember the current sort order
 
+    // Increment the sort order and wrap around after reaching the maximum value
+    sortOrder = (sortOrder + 1) % 3;
+
+    // Sort items based on the current sort order
+    switch (sortOrder) {
+    case 0:
+        ui->listWidget->sortItems(Qt::AscendingOrder);
+        break;
+    case 1:
+        ui->listWidget->sortItems(Qt::DescendingOrder);
+        break;
+    case 2:
+        // To revert to the original order, just clear the sorting
+        ui->listWidget->setSortingEnabled(false);
+        ui->listWidget->sortItems(Qt::AscendingOrder);  // Sort to refresh the original order
+        ui->listWidget->setSortingEnabled(true);  // Re-enable sorting
+        break;
+    }
 }
 
+
+
+void MainWindow::on_DeleteButton_clicked()
+{
+    for (int i = 0; i < ui->listWidget->count(); ++i) {
+        QListWidgetItem* item = ui->listWidget->item(i);
+
+        // Check if the item is checked
+        if (item->checkState() == Qt::Checked) {
+            // Remove the checked item from the list widget
+            delete ui->listWidget->takeItem(i);
+            --i; // Decrement i to handle the removal of the current item
+        }
+    }
+
+}
 

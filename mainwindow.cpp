@@ -4,13 +4,12 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 
-
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
 
     QFile file(path);
     if(!file.open(QIODevice::ReadWrite)) { //open file
@@ -31,22 +30,22 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
+MainWindow::~MainWindow() {
 
     QFile file(path);
-    if(!file.open(QIODevice::ReadWrite)) { //open file
-        QMessageBox::information(0, "error", file.errorString());// gives error if no file for todo list is vailable
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    } else {
+        QTextStream out(&file);
+        int itemCount = ui->listWidget->count();
+        if (itemCount == 0) {
+        }
+        for (int i = 0; i < itemCount; ++i) {
+            out << ui->listWidget->item(i)->text() << "\n";
+        }
+        file.close();
     }
+    delete ui;
 
-    QTextStream out(&file); //Reads File
-
-    for ( int i = 0; i < ui->listWidget->count(); ++i){
-        out<<ui->listWidget->item(i)->text()<<"\n";
-
-    }
-    file.close();
 }
 
 void MainWindow::on_addButton_clicked()
@@ -77,6 +76,7 @@ void MainWindow::on_clearButton_2_clicked()
     ui->listWidget->clear(); //clears the list
 
 }
+
 
 
 
